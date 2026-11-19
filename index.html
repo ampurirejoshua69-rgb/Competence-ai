@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Competence AI - Learn Smarter</title>
+<style>
+*{box-sizing:border-box;font-family:system-ui,Arial}
+body{margin:0;background:#0f1115;color:#fff}
+header{padding:16px 20px;display:flex;justify-content:space-between;align-items:center}
+.logo{font-weight:900;font-size:22px} .logo span{color:#00e676}
+.btn{background:#00e676;color:#000;border:0;padding:10px 16px;border-radius:999px;font-weight:700;cursor:pointer}
+.hero{padding:30px 20px;text-align:center}
+.hero h1{font-size:32px;line-height:1.1;margin:10px 0}
+.hero p{color:#aaa}
+.chat{max-width:700px;margin:0 auto;padding:0 16px 20px}
+#messages{background:#1a1d24;border-radius:16px;padding:16px;min-height:260px}
+.msg{margin:10px 0;padding:12px 14px;border-radius:12px;line-height:1.5}
+.user{background:#00e676;color:#000;margin-left:40px}
+.ai{background:#2a2e38}
+.inputrow{display:flex;gap:8px;margin-top:12px}
+input{flex:1;padding:14px;border-radius:999px;border:0;background:#1a1d24;color:#fff;outline:none}
+.pricing{display:flex;gap:12px;justify-content:center;padding:20px;flex-wrap:wrap}
+.card{background:#1a1d24;border-radius:16px;padding:20px;width:280px;text-align:center}
+.card h3{margin:0}.price{font-size:28px;font-weight:900;margin:10px 0}
+small{color:#aaa}
+</style>
+</head>
+<body>
+<header><div class="logo">Competence<span>AI</span></div><button class="btn" onclick="showPay()">Go Pro</button></header>
+
+<div class="hero">
+<h1>An AI powered application for<br>competence learning and research</h1>
+<p>Ask any question. Get step-by-step answer like a UNEB teacher. Ugandan examples. Simple English.</p>
+<p id="left">Free questions left today: <b>5</b></p>
+</div>
+
+<div class="chat">
+<div id="messages"><div class="msg ai">Hello! I'm Competence AI. Ask me e.g. "Explain photosynthesis for S.4" or "Solve 2x + 5 = 13"</div></div>
+<div class="inputrow">
+<input id="q" placeholder="Ask a question... e.g. What is photosynthesis?">
+<button class="btn" onclick="ask()">Ask</button>
+</div>
+</div>
+
+<div class="pricing" id="pay">
+<div class="card">
+<h3>Free</h3><div class="price">$0</div><p>5 questions / day<br>All subjects</p><button class="btn" onclick="alert('You are on Free plan')">Start Free</button>
+</div>
+<div class="card" style="border:2px solid #00e676">
+<h3>Pro - Uganda</h3><div class="price">UGX 3,600 / month</div><p>Unlimited questions<br>UNEB past paper style</p>
+<!-- REPLACE WITH YOUR FLUTTERWAVE LINK -->
+<button class="btn" onclick="window.open('https://flutterwave.com/pay/YOUR-LINK','_blank')">Pay with MoMo / Card</button>
+</div>
+<div class="card">
+<h3>Pro - International</h3><div class="price">$5 / month</div><p>Unlimited questions<br>For USA / UK / World</p>
+<!-- REPLACE WITH YOUR STRIPE LINK -->
+<button class="btn" onclick="window.open('https://buy.stripe.com/YOUR-LINK','_blank')">Pay with Visa / Card</button>
+</div>
+</div>
+<p style="text-align:center"><small>© 2026 Competence AI • Made by ampurirejoshua69</small></p>
+
+<script>
+let left = 5;
+// PUT YOUR FREE GEMINI API KEY HERE LATER
+const API_KEY = ""; // get from aistudio.google.com
+
+async function ask(){
+  let input = document.getElementById('q');
+  let text = input.value.trim();
+  if(!text) return;
+  if(left <= 0){ alert("Free limit reached. Go Pro to continue."); showPay(); return; }
+  let box = document.getElementById('messages');
+  box.innerHTML += `<div class="msg user">${text}</div>`;
+  box.innerHTML += `<div class="msg ai" id="loading">Thinking...</div>`;
+  input.value = "";
+  left--; document.getElementById('left').innerHTML = `Free questions left today: <b>${left}</b>`;
+
+  let answer = await getAnswer(text);
+  document.getElementById('loading').id = "";
+  document.querySelector('#messages .msg:last-child').innerHTML = answer;
+  box.scrollTop = box.scrollHeight;
+}
+
+async function getAnswer(q){
+  // DEMO MODE if no API key yet - so you can test today
+  if(!API_KEY){
+    return `<b>Step-by-step answer (Demo):</b><br><br>Question: ${q}<br><br><b>1. What it means:</b> In simple English, this is about competence learning.<br><b>2. Example from Uganda:</b> Think of a boda rider in Kampala - same logic applies.<br><b>3. Answer:</b> This is demo mode. Add your Gemini API key to get real AI answers.<br><br><b>Practice for you:</b> Try asking a similar question in your own words.`;
+  }
+  try{
+    let res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`,{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({contents:[{parts:[{text:`You are Competence AI, a Ugandan teacher for UNEB competence-based curriculum. Answer in simple English, step-by-step, with Ugandan examples, and give 2 practice questions at end. Question: ${q}`}]}]})
+    });
+    let data = await res.json();
+    return data.candidates[0].content.parts[0].text.replace(/\n/g,'<br>');
+  }catch(e){ return "Error connecting to AI. Check your API key and internet."; }
+}
+function showPay(){ document.getElementById('pay').scrollIntoView({behavior:'smooth'}); }
+</script>
+</body>
+</html>
