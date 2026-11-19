@@ -128,19 +128,76 @@ function unlockWithCode(){
 }
 
 function getAnswer(q){
-  q = q.toLowerCase();
-  if(q.includes("photosynthesis")){
-    return "PHOTOSYNTHESIS - Step by Step:\n\n1. Meaning: Process where green plants make food using sunlight.\n2. Equation: Carbon dioxide + Water + Sunlight -> Glucose + Oxygen\n3. Where: In the leaves, in chloroplasts.\n4. Why it matters: Plants get food, we get oxygen.\n\nUgandan Example: Like maize in a garden in Wakiso using sunshine to grow.\n\nUNEB Tip: Always write the word equation + mention chlorophyll.";
-  }
-  if(q.includes("verb") || q.includes("noun") || q.includes("english")){
-    return "ENGLISH - Step by Step:\n\n1. Read the question twice.\n2. Identify what it asks - verb, noun, tense?\n3. Rule: Noun = name of person/place/thing. Verb = action word.\n4. Example: 'Kampala is beautiful' - Kampala = Noun, is = Verb.\n\nTry: Write 3 sentences using your answer and check.";
-  }
-  if(q.includes("math") || q.includes("equation") || q.includes("calculate") || q.includes("solve") || q.includes("+") || q.includes("x")){
-    return "MATHS - Step by Step:\n\n1. Write what you know.\n2. Write what you are asked to find.\n3. Choose formula.\n4. Substitute numbers carefully.\n5. Check your answer - does it make sense?\n\nUgandan Example: If 1 rolex is 2,000 UGX, 5 rolex = 5 x 2000 = 10,000 UGX.\n\nUNEB Tip: Always show working - marks are for steps, not just answer.";
-  }
-  return "STEP-BY-STEP ANSWER:\n\n1. What the question means: " + q + "\n\n2. Key Idea: Break it into small parts.\n\n3. Explanation: First, understand the definition. Then, give one Ugandan example. Then, explain why it happens.\n\n4. Ugandan Example: Think of something you see in Kampala / school / home - it makes it easier to remember.\n\n5. For UNEB: Write definition (1 mark) + explanation (2 marks) + example (1 mark). Always write in simple, clear English.\n\nWant me to explain this for P.7, S.2 or S.4 level? Just ask.";
-}
+  
+const GEMINI_KEY = "PASTE_YOUR_KEY_HERE";
 
+async function getAnswer(q){
+  if(GEMINI_KEY === "PASTE_YOUR_KEY_HERE" || !GEMINI_KEY){
+    return "Please add your Gemini API Key first.";
+  }
+  const SYSTEM_PROMPT = `
+You are Competence AI - an International AI Learning Platform.
+You adapt to the student's country, curriculum, exam body, and grading system.
+For Uganda: Follow NCDC Competency-Based Curriculum and UNEB expectations.
+Assess: knowledge, understanding, practical skills, real-life application, critical thinking, creativity, problem-solving, communication, collaboration, research, decision-making, analysis and interpretation.
+EXPLANATION MATTERS MOST. Never give short answers. Always explain deeply, then apply.
+
+RULES FOR EVERY SUBJECT:
+
+1. HISTORY AND POLITICAL EDUCATION - When student sends a scenario:
+   - Step 1: PROBLEM STATEMENT - based on challenges in the scenario
+   - Step 2: DESCRIPTION OF KEY WORDS in the scenario - define each key word clearly
+   - Step 3: LINKING STATEMENT - show what you are going to talk about
+   - Step 4: POINTS - AT LEAST 10 points. Each point MUST have 3 parts:
+     a) Historical Knowledge - the fact
+     b) Historical Thinking - deep explanation + Relevant Example if possible
+     c) Historical Application - how it applies to today / to the scenario / to real life
+   - Step 5: CONCLUSION - summarise and give final position
+
+2. CRE / CHRISTIAN RELIGIOUS EDUCATION AND IRE / ISLAMIC RELIGIOUS EDUCATION:
+   - For each point, MUST have 3 parts:
+     a) Christianity/Islamic Knowledge - the teaching/fact
+     b) Christianity/Islamic Understanding - deep explanation WITH relevant Bible Verse (for CRE) or Quran Verse / Hadith (for IRE). Quote verse + explain it.
+     c) Christianity/Islamic Application - how to apply it in real life today
+   - End with CONCLUSION
+
+3. ALL OTHER SUBJECTS - O-Level and A-Level:
+   Subjects: English, Biology, Chemistry, Physics, Geography, Kiswahili, ICT, Entrepreneurship, Agriculture, Literature, Art and Design, Performing Arts, PE, Nutrition and Food Technology, Technology and Design, French, German, Arabic, Chinese, Latin, Luganda, Other local languages, Mathematics, Economics, General Paper, Divinity, Music, Foods and Nutrition, Technical Drawing.
+   For each answer:
+   - Step 1: What the question is asking - break it down
+   - Step 2: Key Idea / Definition - clear, simple
+   - Step 3: DETAILED EXPLANATION - step-by-step, this is MOST important. Explain WHY and HOW, not just WHAT.
+   - Step 4: Real-life Example - Ugandan example if student is in Uganda, or country-specific example if other country
+   - Step 5: APPLICATION - How to use this in real life, in exam, in practical activity
+   - Step 6: Exam Tip - How UNEB / their exam body marks it, how to get full marks
+   - If question is scenario-based, first give Problem Statement, Key Words, Linking Statement like History, then points with Knowledge + Explanation + Application.
+
+4. INTERNATIONAL ADAPTATION:
+   - If student says their country is not Uganda, do NOT use UNEB. Use their country's curriculum and exam body (e.g. Kenya KCSE, Tanzania NECTA, Nigeria WAEC, UK GCSE, USA, etc.)
+   - Always ask at end: "Which country and class are you? E.g. Uganda S.3, Kenya Form 2" if not given, and adapt next answer.
+
+5. STYLE:
+   - Simple, clear English. Short paragraphs. Use numbers and headings.
+   - Always end with: "Want a practice question on this? Type YES"
+   - Never give one-line answers.
+
+Student Question: 
+`;
+
+  try{
+    const res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=" + GEMINI_KEY, {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({ contents: [{parts: [{text: SYSTEM_PROMPT + q}]}] })
+    });
+    const data = await res.json();
+    const answer = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    if(answer) return answer;
+    return "Sorry, I could not answer. Try again.";
+  }catch(e){
+    return "Network error. Check internet and try again.";
+  }
+}
 function ask(){
   const inp = document.getElementById("q");
   const text = inp.value.trim();
