@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Competence AI - Learn Smarter</title>
+<style>
+*{box-sizing:border-box;font-family:system-ui,Arial}
+body{margin:0;background:#0f1115;color:#fff}
+header{padding:16px 20px;display:flex;justify-content:space-between;align-items:center}
+.logo{font-weight:900;font-size:22px}.logo span{color:#00e676}
+.btn{background:#00e676;color:#000;border:0;padding:12px 18px;border-radius:999px;font-weight:700;cursor:pointer;width:100%}
+.btn2{background:#222;color:#fff;border:1px solid #444;padding:10px 14px;border-radius:999px;font-weight:700;cursor:pointer}
+.hero{padding:20px 20px;text-align:center}
+.hero h1{font-size:32px;line-height:1.1;margin:10px 0}
+.hero p{color:#aaa}
+.chat{max-width:700px;margin:0 auto;padding:0 16px 20px}
+#messages{background:#1a1d24;border-radius:16px;padding:16px;min-height:260px}
+.msg{margin:10px 0;padding:12px 14px;border-radius:12px;line-height:1.5;white-space:pre-wrap}
+.user{background:#00e676;color:#000;margin-left:40px}
+.ai{background:#2a2e38}
+.row{display:flex;gap:8px;margin-top:12px}
+input{flex:1;padding:14px;border-radius:999px;border:1px solid #333;background:#1a1d24;color:#fff;outline:none}
+.topbar{display:flex;justify-content:space-between;align-items:center;background:#1a1d24;padding:10px 14px;border-radius:999px;margin-bottom:12px;font-size:14px}
+.badge{background:#00e676;color:#000;padding:4px 10px;border-radius:999px;font-weight:700}
+.paywall{display:none;background:#1a1d24;border:2px solid #00e676;border-radius:16px;padding:20px;text-align:center;margin-top:12px}
+.paywall h2{margin:0 0 8px}
+.price{font-size:36px;font-weight:900;margin:10px 0}
+.small{color:#aaa;font-size:13px}
+.payinput{width:100%;padding:14px;border-radius:12px;border:1px solid #333;background:#0f1115;color:#fff;margin:10px 0}
+.hidden{display:none}
+</style>
+</head>
+<body>
+<header>
+<div class="logo">Competence <span>AI</span></div>
+<button class="btn2" onclick="showPay()">Weekly Pass</button>
+</header>
+
+<div class="hero">
+<h1>Ask any question.<br>Get step-by-step answer.</h1>
+<p>Like a UNEB teacher. Ugandan examples. Simple English.</p>
+</div>
+
+<div class="chat">
+<div class="topbar">
+<span>Free left today: <b id="left">4</b></span>
+<span id="status" class="badge">FREE</span>
+</div>
+
+<div id="messages">
+<div class="msg ai">Hello! I am Competence AI. Ask me any question - e.g. What is photosynthesis?</div>
+</div>
+
+<div class="row">
+<input id="q" placeholder="Ask any question..." onkeydown="if(event.key==='Enter')ask()">
+<button class="btn2" onclick="ask()">Send</button>
+</div>
+
+<div id="paywall" class="paywall">
+<h2>🔒 Free Questions Finished</h2>
+<p>Unlock unlimited questions for 7 days</p>
+<div class="price" id="priceText">10,000 UGX / week</div>
+<p id="payMethod" class="small">Pay with MTN MoMo / Airtel Money</p>
+<div id="ugandaPay">
+<p class="small">Step 1: Send <b>10,000 UGX</b> to <b>0770000000</b> - Competence AI<br>Step 2: Enter MoMo Transaction ID below</p>
+<input id="txid" class="payinput" placeholder="Enter MoMo Transaction ID e.g. 1234567890">
+<button class="btn" onclick="unlockWithCode()">I Have Paid - Unlock 7 Days</button>
+</div>
+<div id="usdPay" class="hidden">
+<p class="small">Pay $2.50 securely with Card</p>
+<button class="btn" onclick="alert('Card payment coming soon. WhatsApp us to activate.')">Pay $2.50 With Card</button>
+</div>
+<p class="small" style="margin-top:12px">After payment you get 7 days unlimited.</p>
+</div>
+</div>
+
+<script>
+let isUganda = true;
+try{
+  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+  if(tz === "Africa/Kampala") isUganda = true;
+  else if(tz && tz.indexOf("Africa/") === -1) isUganda = false;
+  else if(tz && tz !== "Africa/Kampala") {
+    const lang = (navigator.language || "").toLowerCase();
+    if(lang.indexOf("ug") !== -1) isUganda = true; else isUganda = false;
+  }
+}catch(e){ isUganda = true; }
+
+if(isUganda){
+  document.getElementById("priceText").innerText = "10,000 UGX / week";
+  document.getElementById("payMethod").innerText = "Pay with MTN MoMo / Airtel Money";
+  document.getElementById("ugandaPay").classList.remove("hidden");
+  document.getElementById("usdPay").classList.add("hidden");
+}else{
+  document.getElementById("priceText").innerText = "$2.50 USD / week";
+  document.getElementById("payMethod").innerText = "Pay with Card / Visa / Mastercard";
+  document.getElementById("ugandaPay").classList.add("hidden");
+  document.getElementById("usdPay").classList.remove("hidden");
+}
+
+function todayKey(){ return "cai_" + new Date().toDateString(); }
+function getCount(){ return parseInt(localStorage.getItem(todayKey()) || "0"); }
+function getExpiry(){ return parseInt(localStorage.getItem("cai_expiry") || "0"); }
+function isPaid(){ return Date.now() < getExpiry(); }
+
+function refresh(){
+  if(isPaid()){
+    document.getElementById("left").innerText = "∞";
+    document.getElementById("status").innerText = "WEEKLY PASS • " + Math.ceil((getExpiry()-Date.now())/86400000) + " days left";
+    document.getElementById("paywall").style.display = "none";
+  }else{
+    const left = Math.max(0, 4 - getCount());
+    document.getElementById("left").innerText = left;
+    document.getElementById("status").innerText = "FREE";
+    if(left === 0) document.getElementById("paywall").style.display = "block";
+  }
+}
+function showPay(){ document.getElementById("paywall").style.display = "block"; window.scrollTo(0, document.body.scrollHeight); }
+
+function unlockWithCode(){
+  const v = document.getElementById("txid").value.trim();
+  if(v.length < 6){ alert("Enter correct MoMo Transaction ID - at least 6 characters"); return; }
+  localStorage.setItem("cai_expiry", String(Date.now() + 7*24*60*60*1000));
+  localStorage.setItem("cai_last_tx", v);
+  alert("Success! Weekly Pass activated for 7 days.");
+  refresh();
+}
+
+function getAnswer(q){
+  q = q.toLowerCase();
+  if(q.includes("photosynthesis")){
+    return "PHOTOSYNTHESIS - Step by Step:\n\n1. Meaning: Process where green plants make food using sunlight.\n2. Equation: Carbon dioxide + Water + Sunlight -> Glucose + Oxygen\n3. Where: In the leaves, in chloroplasts.\n4. Why it matters: Plants get food, we get oxygen.\n\nUgandan Example: Like maize in a garden in Wakiso using sunshine to grow.\n\nUNEB Tip: Always write the word equation + mention chlorophyll.";
+  }
+  if(q.includes("verb") || q.includes("noun") || q.includes("english")){
+    return "ENGLISH - Step by Step:\n\n1. Read the question twice.\n2. Identify what it asks - verb, noun, tense?\n3. Rule: Noun = name of person/place/thing. Verb = action word.\n4. Example: 'Kampala is beautiful' - Kampala = Noun, is = Verb.\n\nTry: Write 3 sentences using your answer and check.";
+  }
+  if(q.includes("math") || q.includes("equation") || q.includes("calculate") || q.includes("solve") || q.includes("+") || q.includes("x")){
+    return "MATHS - Step by Step:\n\n1. Write what you know.\n2. Write what you are asked to find.\n3. Choose formula.\n4. Substitute numbers carefully.\n5. Check your answer - does it make sense?\n\nUgandan Example: If 1 rolex is 2,000 UGX, 5 rolex = 5 x 2000 = 10,000 UGX.\n\nUNEB Tip: Always show working - marks are for steps, not just answer.";
+  }
+  return "STEP-BY-STEP ANSWER:\n\n1. What the question means: " + q + "\n\n2. Key Idea: Break it into small parts.\n\n3. Explanation: First, understand the definition. Then, give one Ugandan example. Then, explain why it happens.\n\n4. Ugandan Example: Think of something you see in Kampala / school / home - it makes it easier to remember.\n\n5. For UNEB: Write definition (1 mark) + explanation (2 marks) + example (1 mark). Always write in simple, clear English.\n\nWant me to explain this for P.7, S.2 or S.4 level? Just ask.";
+}
+
+function ask(){
+  const inp = document.getElementById("q");
+  const text = inp.value.trim();
+  if(!text) return;
+  if(!isPaid()){
+    if(getCount() >= 4){
+      document.getElementById("paywall").style.display = "block";
+      alert("Free questions finished. Get Weekly Pass - 10,000 UGX / $2.50");
+      return;
+    }
+    localStorage.setItem(todayKey(), String(getCount()+1));
+  }
+  const box = document.getElementById("messages");
+  box.innerHTML += '<div class="msg user">'+text+'</div>';
+  box.innerHTML += '<div class="msg ai">Thinking...</div>';
+  inp.value = "";
+  box.scrollTop = box.scrollHeight;
+  setTimeout(()=>{
+    const all = box.querySelectorAll(".ai");
+    all[all.length-1].innerText = getAnswer(text);
+    refresh();
+  }, 600);
+}
+refresh();
+</script>
+</body>
+</html>
