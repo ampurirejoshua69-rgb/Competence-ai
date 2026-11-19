@@ -213,12 +213,12 @@ function ask(){
   box.innerHTML += '<div class="msg ai">Thinking...</div>';
   inp.value = "";
   box.scrollTop = box.scrollHeight;
-  setTimeout(()=>{
-    const all = box.querySelectorAll(".ai");
-    all[all.length-1].innerText = getAnswer(text);
-    refresh();
-  }, 600);
-}
+  
+}getAnswer(text).then(answer => {
+  const all = box.querySelectorAll(".ai");
+  all[all.length-1].innerText = answer;
+  refresh();
+});
 refresh();
 </script>
 </body>
