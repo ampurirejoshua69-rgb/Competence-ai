@@ -127,10 +127,10 @@ function unlockWithCode(){
   refresh();
 }
 
-const GEMINI_KEY = "PASTE_YOUR_KEY_HERE";
+const GEMINI_KEY = "AQ.Ab8RN6KMQb1nkshy0t30BS0TZ7XiUVjMkP9qWzaC4VzokIzGTA";
 
 async function getAnswer(q){
-  if(GEMINI_KEY === "PASTE_YOUR_KEY_HERE" || !GEMINI_KEY){
+  if(GEMINI_KEY === " AQ.Ab8RN6KMQb1nkshy0t30BS0TZ7XiUVjMkP9qWzaC4VzokIzGTA" || !GEMINI_KEY){
     return "Please add your Gemini API Key first.";
   }
   const SYSTEM_PROMPT = `
